@@ -5,7 +5,10 @@
 + R w wersji przynajmniej 4.4.2 (+ Rtools dla Windows)
 + RStudio
 + Pakiety: `tidyverse`, `data.table`, `sandwich`
-
++ Dane:
+  + plik `gospodarstwa.xlsx`
+  + inne pliki: [Badanie Kapitału Ludzkiego](https://www.parp.gov.pl/component/site/site/bilans-kapitalu-ludzkiego#metodologiabadaniabkl)
+  
 ## Podstawowe informacje
 
 **Zakres szkolenia**:
