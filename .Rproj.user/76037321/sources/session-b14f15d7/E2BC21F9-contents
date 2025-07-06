@@ -32,10 +32,13 @@
 
 ## Finansowanie
 
-![Projekt „Kompleksowy program podniesienia kwalifikacji i kompetencji
+![](misc/logo-finansowanie.jpg)
+
+Projekt „Kompleksowy program podniesienia kwalifikacji i kompetencji
 kadry akademickiej i doktorantów Uniwersytetu Ekonomicznego w Poznaniu”
 FERS.01.05-IP.08-0182/23 współfinansowany przez Unię Europejską z
 Europejskiego Funduszu Społecznego Plus w ramach Programu Fundusze
-Europejskie dla Rozwoju Społecznego 2021-2027](misc/logo-finansowanie.jpg)
+Europejskie dla Rozwoju Społecznego 2021-2027 [LINK](https://ue.poznan.pl/pozyskiwanie-funduszy/kompleksowy-program-podniesienia-kwalifikacji-i-kompetencji-kadry-akademickiej-i-doktorantow-uniwersytetu-ekonomicznego-w-poznaniu/)
+
 
 
