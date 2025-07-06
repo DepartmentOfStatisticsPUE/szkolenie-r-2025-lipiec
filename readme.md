@@ -3,7 +3,7 @@
 ## Wymagania
 
 + R w wersji przynajmniej 4.4.2 (+ Rtools dla Windows)
-+ RStudio
++ RStudio / Positron / Google Colab
 + Pakiety: `tidyverse`, `data.table`, `sandwich`
 + Dane:
   + plik `gospodarstwa.xlsx`
