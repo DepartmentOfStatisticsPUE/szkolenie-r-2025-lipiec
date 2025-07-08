@@ -167,13 +167,132 @@ mutate(gosp,
        .by=trb,
        .after=trb) ## według grup
 ```
+Ćwiczenia z funkcją mutate
+
++ wstawić kolumnę z wartością "bez problemu" jeżeli ktoś wskazał w pytaniu d63 odpowidzi od "Raczej łatwo" do "Bardzo łatwo", a w przeciwnym wypadku "z pewnymi problemami" (podpowiedź: funkcja jeżeli)
+
++ utworzyć kolumnę przyjmującą wartość 1 gdy miejsce zamieszkania to miasto pow. 500 tys. mieszkańców z Wielkopolski, w przeciwnym wypadku 0
+
+```{r}
+mutate(gosp, 
+       sytuacja = ifelse(d63 >= 4, "bez problemu", "z pewnymi problemami"),
+       poznan = as.numeric(klm == 1 & woj == "30"),
+       .before = "klm")
+```
+
+Tworzymy podsumowania danych z funkcją summarise / summarize
+
+```{r}
+summarise(gosp, 
+          mediana = median(wydg, na.rm = TRUE),
+          mean = mean(wydg, na.rm=TRUE),
+          relacja = mediana/mean)
+
+summarise(gosp, 
+          mediana = median(wydg, na.rm = TRUE),
+          mean = mean(wydg, na.rm=TRUE),
+          .by = woj)
+
+summarise(gosp, 
+          mediana = median(wydg, na.rm = TRUE),
+          mean = mean(wydg, na.rm=TRUE),
+          relacja = mediana/mean,
+          .by = c(woj, klm))
+```
+
+```{r}
+summarise_at(gosp, 
+             vars(wydg, dochg), 
+             mean, na.rm=T)
+
+summarise_at(gosp, 
+             vars(wydg, dochg), 
+             list(srednia = mean, 
+                  mediana = median, 
+                  odchyl = sd), na.rm=T)
+
+summarise_at(gosp, 
+             vars(matches("d6|wydg|dochg")), 
+             list(srednia = mean, 
+                  mediana = median, 
+                  odchyl = sd), na.rm=T)
+```
+
+Ćwiczenie:
+
++ dla zmiennej wydg wyznacz kwartyl 1, medianę i kwartyl 3 według województw
 
 
+```{r}
+summarise(gosp,
+          wydg_q1 = quantile(wydg, 0.25, na.rm=TRUE),
+          wydg_q2 = quantile(wydg, 0.50, na.rm=TRUE),
+          wydg_q3 = quantile(wydg, 0.75, na.rm=TRUE),
+          .by = woj)
+```
+Korzystamy z funkcji group_by
+
+```{r}
+group_by(gosp, woj)
+
+summarise(group_by(gosp, woj),
+          wydg_q1 = quantile(wydg, 0.25, na.rm=TRUE),
+          wydg_q2 = quantile(wydg, 0.50, na.rm=TRUE),
+          wydg_q3 = quantile(wydg, 0.75, na.rm=TRUE))
+
+summarise(group_by(gosp, region=woj, miejsce=klm),
+          wydg_q1 = quantile(wydg, 0.25, na.rm=TRUE),
+          wydg_q2 = quantile(wydg, 0.50, na.rm=TRUE),
+          wydg_q3 = quantile(wydg, 0.75, na.rm=TRUE))
+```
 
 
+Potowkowe przetwarzanie danych
+
+ctrl+shift+m
+%>% magrittir
+|>
+
+```{r}
+gosp |> 
+  filter(klm == 1, woj == 30) |> 
+  group_by(trb) |>
+  summarise(mediana = median(wydg, na.rm = TRUE))
+```
 
 
+```{r}
+read_excel("../data-raw/gospodarstwa.xlsx") |> 
+  filter(klm == 1, woj == 30) |> 
+  group_by(trb) |>
+  summarise(mediana = median(wydg, na.rm = TRUE)) |>
+  write_xlsx(path = "../results/wyniki1-tab.xlsx")
+
+read_excel("../data-raw/gospodarstwa.xlsx") |> 
+  filter(.data = _, klm == 1, woj == 30) 
+
+read_excel("../data-raw/gospodarstwa.xlsx") %>%
+  filter(.data = ., klm == 1, woj == 30) 
+```
+
+Ćwiczenie na potkowe przetwarzanie danych
+
+na zborze gosp należy wykonać następujące działania:
+
++ [select] wybierz kolumny klm (zmien nazwę na miasto), woj (region), los (l_osob), wydg i dochg
++ [mutate] utwórz nową kolumnę poznan (na podstawie wczesniejszych warunków) i kolumnę relacja = wydg / dochg
++ [group_by] zgrupuj dane według l_osob i poznan
++ [summarise / summarise_at] podsumuj kolumny wydg, dochg i relacja używając średniej i mediany
 
 
+```{r}
+gosp |>
+  select(miasto=klm, region=woj, l_osob=los, wydg, dochg) |>
+  mutate(poznan = miasto == 1 & region == "30",
+         relacja = wydg/dochg) |>
+  group_by(l_osob, poznan) |>
+  summarise_at(vars(wydg, dochg, relacja),
+               list(sr=mean, median), na.rm=T)
+```
 
 
