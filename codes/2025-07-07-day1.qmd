@@ -1,0 +1,167 @@
+---
+title: "Pierwszy notatnik"
+author: "Maciej"
+format: pdf
+---
+
+# Wczytywanie danych
+
+Wczytujemy plik gospodarstwa z serwisu github
+
+https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/szkolenie-r-2025-lipiec/refs/heads/main/data/gospodarstwa1.csv
+
+```{r}
+# uzywam funkcji read.csv do wczytania danych z interentu
+dane <- read.csv2("https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/szkolenie-r-2025-lipiec/refs/heads/main/data/gospodarstwa1.csv", dec = ".")
+head(dane)
+dim(dane)
+hist(dane$wydg, breaks = "scott") ## metoda: fd lub scott jest rekomendowana do danych skośnych
+```
+Zadanie:
+
+- zlokalizować plik gospodarstwa2.csv na github
+- skopiować link
+- sprawdzić co rozdziela kolumny, a co rozdziela miejsca dziesiętne
+- uzyć funkcji read.table podajać link do pliku, header, separator i symbol rozdzielający miejsca dziesiętne
+
+
+```{r}
+dane2 <- read.table("https://raw.githubusercontent.com/DepartmentOfStatisticsPUE/szkolenie-r-2025-lipiec/refs/heads/main/data/gospodarstwa2.csv", sep = "|", dec = ",", header = T, 
+                    na.strings = c("-9999", "N/A"))
+head(dane2)
+```
+Podsumowujemy dane, które wczytaliśmy
+
+```{r}
+summary(dane2)
+summary(dane2$wydg)
+```
+
+Jak wybierać kolumny z ramki danych
+
+```{r}
+dane2[, 1] ## wybieram pierwszą kolumnę i wszystkie wiersze (uwaga numerujemy od 1)
+dane2[, "wydg"] ## wybieram kolumnę po jej nazwie 
+dane2[["wydg"]] ## notacja [[ ]] 
+dane2$wydg
+subset(dane2, select = wydg) ## zwraca ramkę danych
+```
+
+Wybieramy więcej kolumn
+
+```{r}
+dane2[,1:3] ## wybieramy pierwsze 3 kolumny
+dane2[, c("klm", "trb", "wydg")]
+dane2[, c(1,5,10)]
+
+names(dane2) ## zwraca nazwy kolumn
+
+grepl("d", names(dane2)) ## szukam kolumn, które zawierają literę d
+
+dane[, grepl("d", names(dane2))]
+
+dane[, grepl("g$", names(dane2))]  ## kolumny, które kończą się na literę g
+```
+
+Zadanie:
+
+- podsumować kolumne dochg
+- stworzyć wykres dochg vs wydg
+- stworzyć wykres pudełkowy (boxplot): dochg względem klm
+
+```{r}
+summary(dane2$dochg)
+plot(dane2$dochg, dane2$wydg)
+boxplot(dochg ~ klm, data = dane2, col = "bisque")
+```
+
+Tworzymy nowe kolumny -- dodanie do zbioru danych kolejnych kolumn (wektorów)
+
+```{r}
+dane2$stala <- 1 ## dostawiam nową kolumnę z samymi 1 
+# dane2$dochg <- 1 ## nadpisuje istniejącą kolumnę
+
+dane2$stala2 <- 1:4 ## jest bład bo liczba wierszy nie jest podzielna przez 3
+dane2$stala2 <- 1:3 ## nie ma błędu bo liczba wierszy jest podzielna przez 3
+
+head(dane2)
+```
+
+Dostawiam nową kolumnę, która sprawdza gdzie wydatki są wyższe od dochodów
+
+```{r}
+dane2$wyd_doch <- dane2$wydg >= dane2$dochg
+dane2$wyd_doch_war <- ifelse(dane2$wydg >= dane2$dochg, "więcej", "mniej") ## jezeli(war, T, F)
+head(dane2)
+```
+
+Tworzę nową kolumnę, w której porównuje wartości wydatków do mediany wydatków
+
+```{r}
+summary(dane2$wydg)[3] ## mediana to 3 element wektora
+median(dane2$wydg, na.rm = TRUE)
+```
+
+```{r}
+dane2$wyd_med <- dane2$wydg >= median(dane2$wydg, na.rm=TRUE)
+head(dane2)
+```
+
+Wstawiamy nowe kolumny bez konieczności ciągłego podawania nazwy zbioru danych
+
+```{r}
+# alternatywa do: dane2$nowa <- dane2$dochg - dane2$wydg
+
+## nadpisujemy zbiór danych aby zobaczyć nowe kolumny
+dane2 <- transform(dane2, 
+                   nowa = dochg - wydg,
+                   nowa_rel = dochg/wydg,
+                   nowa_dif = wydg-dochg)
+
+dane2$nowa2 <- with(dane2, dochg - wydg) ## na zbiorze danych wykonaj działanie
+head(dane2)
+```
+Przetwarzamy kolumny z wykorzystaniem róznego typu warunków
+
+- chcę utworzyć nową kolumnę składającą się 0 / 1 na podstawie następującego warunku:
+
+- jeżeli 
+    + los >=4, i
+    + klm przymuje wartości 1, 4, 5 , i 
+    + dochód jest większy od 5000 
+    
+    to wstaw 1 w przeciwnym wypadku 0
+
+
+```{r}
+dane2$warunek1 <- dane2$los >= 4 & dane2$klm %in% c(1,4,5) & dane2$dochg > 5000
+
+dane2$warunek2 <- with(dane2, los >= 4 & klm %in% c(1,4,5) & dochg > 5000)
+
+table(dane2$warunek1)
+table(dane2$warunek2)
+all.equal(dane2$warunek1, dane2$warunek2)
+```
+
+Warunek z alternatywną 
+
+- tworzymy zmienną zero-jedynkową jeżeli dochód jest 
+      mniejsze od 2000 lub większe od 10 000
+
+```{r}
+dane2$dochg_5_7 <- with(dane2, dochg < 2000 | dochg > 10000)
+table(dane2$dochg_5_7)
+```
+
++ dochg < 1000 & wydg < 1000  LUB
++ dochg > 10000 & wydg > 10000
+
+3989
+
+```{r}
+dane2$outliery <- with(dane2, 
+                       (dochg < 1000 & wydg < 1000) | (dochg > 10000 & wydg > 10000))
+
+table(dane2$outliery)
+```
+

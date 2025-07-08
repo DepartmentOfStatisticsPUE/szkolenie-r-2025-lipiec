@@ -44,4 +44,4 @@ Europejskiego Funduszu Społecznego Plus w ramach Programu Fundusze
 Europejskie dla Rozwoju Społecznego 2021-2027 [LINK](https://ue.poznan.pl/pozyskiwanie-funduszy/kompleksowy-program-podniesienia-kwalifikacji-i-kompetencji-kadry-akademickiej-i-doktorantow-uniwersytetu-ekonomicznego-w-poznaniu/)
 
 
-
+## Literatura
