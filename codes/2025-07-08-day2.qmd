@@ -1,0 +1,179 @@
+---
+title: "Szkolenie dzień drugi"
+format: html
+---
+
+Tematy:
+
++ wczytanie danych z pliku na dysku
+
+Wczytujemy dane z folderu Pobrane 
+
+```{r}
+gosp <- read.csv("~/Downloads/gospodarstwa1.csv")
+```
+
+Wczytujemy dane z projektu
+
+```{r}
+gosp <- read.csv2("../data-raw/gospodarstwa1.csv")
+head(gosp)
+```
+
++ wczytywanie danych z excela
+
+Sprawdzamy czy dany pakiet istnieje
+
+```{r}
+library("readxlsx")
+```
+Jak możemy zainstalować dodatkowy pakiet
+
+```{r}
+install.packages("readxl") ## funkcja do instalacji pakietów
+```
+
+Instalacja pakietu openxlsx
+
+```{r}
+install.packages("openxlsx")
+```
+
+Ładujemy pakiet readxl
+
+```{r}
+library("readxl")
+```
+
+Wczytujemy dane z pliku XLSX
+
+```{r}
+gosp <- read_excel("../data-raw/gospodarstwa.xlsx", sheet = 1)
+head(gosp)
+```
+```{r}
+excel_sheets("../data-raw/gospodarstwa.xlsx")
+```
+
+Aby uniknąć sytuacji, w której mamy taką samą nazwę funkcji w dwóch róznych pakietach warto korzystać z następującej notacji: pakiet::funkcja
+
+```{r}
+gosp <- readxl::read_excel("../data-raw/gospodarstwa.xlsx", sheet = 1)
+head(gosp)
+```
+
+Zadanie:
+
++ sprawdzić czy macie pakiet writexl
++ jak nie macie to zainstalujcie ten pakiet
++ nastepnie w dokumentacji znajdzcie funkcje do zapisu ramki danych do pliku xlsx
++ zapiszcie zbiór danych gosp do pliku "wynik.xlsx" do folderu "results"
+
+```{r}
+install.packages("writexl")
+library(writexl)
+write_xlsx(x = gosp, path = "../results/wynik.xlsx")
+```
+
+
++ przetwarzanie danych z pakietem tidyverse
+
+```{r}
+install.packages("tidyverse")
+```
+
+```{r}
+library(tidyverse)
+```
+
+Zacznijmy od funkcji select, która służy do wyboru kolumn
+
+```{r}
+select(gosp, klm) ## wybór kolumn i tworzona jest nowa ramka danych
+gosp_podzbior <- select(gosp, klm, wydg) ## wybieramy kolumny i tworzymy nową ramkę danych
+select(gosp, klm:zut) ## wybieram zakres kolumn
+select(gosp, 1, 5, 10) ## mogę wybierac pozycyjnie
+select(gosp, starts_with("d3")) ## kolumny rozpoczynające się od "d3"
+select(gosp, matches("dochg|wydg")) ## kolumny, które mają dochg lub wydg w nazwach
+select(gosp, -klm, -zut) -> nowy_zbior
+select(gosp, wydatki=wydg, dochody=dochg) ## zmieniam nazwy kolumn
+select(gosp, wydatki=wydg, dochody=dochg, klm:zut, 7) 
+head(gosp)
+```
+
+Ćwiczenie:
+
+W jednym select: 
+
++ wybrać kolumny z zakresu od los do wydg
++ wybrać kolumny zaczynajace się od d6
++ wybrac kolumny d345 i d347 i nadac im lepsze nazwy
+
+```{r}
+select(gosp, los:wydg, starts_with("d6"), gaz=d345, ogrzewanie=d347)
+```
+Wybieranie wierszy
+
+```{r}
+gosp[c(1,5,10),]
+gosp[gosp$klm == 1,] ## 4,585 × 16
+gosp[gosp$klm == 1 & gosp$wydg >= 10000, ] ## 62 × 16
+
+subset(gosp, 1:10) ## error
+subset(gosp, klm == 1) 
+subset(gosp, klm == 1 & wydg >= 10000)
+
+filter(gosp, klm == 1)
+filter(gosp, klm == 1 & wydg >= 10000)
+filter(gosp, klm == 1, wydg >= 10000)
+
+filter(gosp, wydg >= median(wydg, na.rm=T)) ## usuwamy braki danych
+filter(gosp, wydg >= median(wydg)) ## co będzie jak nie usuniemy?
+
+filter(gosp, 1:10) ## to nie działa
+slice(gosp, 1:10) ## to działa
+```
+
+Ćwiczenia:
+
++ wybrac gospodarstwa domowe z miast powyżej 200 tys. mieszkańców, którzy z wielką trudnością z aktualnym dochodem wiązali koniec z końcem 
+
+```{r}
+filter(gosp, klm <= 2, d63 == 1) ## 1449
+filter(gosp, klm %in% 1:2, d63 == 1) 
+filter(gosp, klm %in% c(1,2), d63 == 1) 
+```
+
++ wybrać gospodarstwa których wydatki są wyższe niż 9 decyl dochódów (funkcja quantile)
+
+```{r}
+filter(gosp, wydg > quantile(dochg, 0.9, na.rm=T)) ## 2614
+```
+
+Tworzymy nowe kolumny z wykorzystaniem funkcji mutate (funkcja działa podobnie jak transform)
+
+```{r}
+mutate(gosp, 
+       wydg_log = log(wydg),
+       dochg_log = log(dochg+21250),
+       wydg_dochg_rel = wydg_log/dochg_log)
+```
+
+Dodaję do zbioru średnie według grup
+
+```{r}
+mutate(gosp, 
+       wydg_srednie=mean(wydg, na.rm=T), ## nowa kolumna
+       .by=trb,
+       .after=trb) ## według grup
+```
+
+
+
+
+
+
+
+
+
+
