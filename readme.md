@@ -39,7 +39,7 @@
     + Wczytaj zbiór danych `data/wizy-2018.csv`.
     + Podsumuj zbiór danych.
     + Stwórz wykres rozrzutu między zmienną `issued_visas`, a `denied_visas`. Czy jest jakaś zależnosć? 
-    + Stwórz nową zmienną `success = denied_visas/no_visas` i wyznacz podstawowe statystyki opisowe.
+    + Stwórz nową zmienną `success = issued_visas/no_visas` i wyznacz podstawowe statystyki opisowe.
 
 ## Finansowanie
 
