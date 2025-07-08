@@ -6,7 +6,7 @@
 + RStudio / Positron / Google Colab
 + Pakiety: `tidyverse`, `data.table`, `sandwich`
 + Dane:
-  + plik `gospodarstwa.xlsx`
+  + plik `gospodarstwa.xlsx`, `gospodarstwa.csv`, `gospodarstwa2.csv`
   + inne pliki: [Badanie Kapitału Ludzkiego](https://www.parp.gov.pl/component/site/site/bilans-kapitalu-ludzkiego#metodologiabadaniabkl)
   
 ## Podstawowe informacje
@@ -33,6 +33,14 @@
 + Wtorek 8.07: 8:00-16:00 (8 x 45 min)
 + Piątek 11.07: 8:00-16:00 (8 x 45 min)
 
+## Ćwiczenia
+
++ Rozgrzewka:
+    + Wczytaj zbiór danych `data/wizy-2018.csv`.
+    + Podsumuj zbiór danych.
+    + Stwórz wykres rozrzutu między zmienną `issued_visas`, a `denied_visas`. Czy jest jakaś zależnosć? 
+    + Stwórz nową zmienną `success = denied_visas/no_visas` i wyznacz podstawowe statystyki opisowe.
+
 ## Finansowanie
 
 ![](misc/logo-finansowanie.jpg)
@@ -42,6 +50,5 @@ kadry akademickiej i doktorantów Uniwersytetu Ekonomicznego w Poznaniu”
 FERS.01.05-IP.08-0182/23 współfinansowany przez Unię Europejską z
 Europejskiego Funduszu Społecznego Plus w ramach Programu Fundusze
 Europejskie dla Rozwoju Społecznego 2021-2027 [LINK](https://ue.poznan.pl/pozyskiwanie-funduszy/kompleksowy-program-podniesienia-kwalifikacji-i-kompetencji-kadry-akademickiej-i-doktorantow-uniwersytetu-ekonomicznego-w-poznaniu/)
-
 
 ## Literatura
