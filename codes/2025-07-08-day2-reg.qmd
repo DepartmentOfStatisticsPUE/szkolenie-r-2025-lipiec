@@ -1,0 +1,78 @@
+---
+title: "Untitled"
+format: html
+---
+
+Instalacja pakietów
+
+```{r}
+install.packages("sandwich")           ## odporne błędy standardowe (robust SE, clustered SE)
+install.packages("modelsummary")       ## podsumowywanie modeli (publication-ready tables/plots)
+install.packages("marginaleffects")    ## efekty marginalne (AME, average marginal effects)
+install.packages("lmtest")
+```
+
+Ładujemy potrzebne pakiety
+
+```{r}
+library("readxl")
+library("sandwich")
+library("modelsummary")
+library("marginaleffects")
+library("lmtest")
+```
+
+Wczytujemy dane
+
+```{r}
+gosp <- readxl::read_excel("../data-raw/gospodarstwa.xlsx", sheet = 1) |> 
+  na.omit() |>
+  transform(wydg_1k = wydg/1000,
+            dochg_1k = dochg/1000)
+
+head(gosp)
+```
+
+Model wydatków względem dochodów
+
+```{r}
+model1 <- lm(formula = wydg_1k ~ dochg_1k, data = gosp)
+summary(model1)
+```
+
+Wyznaczam odporne błędy standardowe
+
+```{r}
+coeftest(model1)
+coeftest(model1, vcov = vcovHC)
+```
+
+```{r}
+plot(model1)
+```
+
+Zmieniam nasz model na wykładniczy
+
+```{r}
+model2 <- lm(log(wydg_1k) ~ dochg, data = gosp)
+model2 <- update(model1, log(wydg_1k) ~ . )
+model3 <- update(model1, . ~ . + I(dochg_1k^2))
+summary(model2)
+```
+
+```{r}
+coeftest(model1, vcov = vcovHC)
+coeftest(model2, vcov = vcovHC)
+```
+
+Tworzymy tabelę z porównaniem modeli
+
+```{r}
+modelsummary(models = list("liniowy"=model1, "wykładniczy"=model2), 
+             output = "markdown",
+             vcov = "HC1")
+
+modelplot(models = list("liniowy"=model1, "wykładniczy"=model2), 
+             vcov = "HC1")
+```
+
