@@ -1,0 +1,169 @@
+---
+title: "Untitled"
+format: html
+---
+
+```{r}
+library(readxl)
+library(tidyverse)
+```
+
+Problem z danymi:
+
+-   nagłówki kolumn to numery pytań wraz z treścią
+-   wartości pomieszane z etykietami
+-   Wiek przedsiębiorstwa podany raz jako rok, raz liczba lat
+-   nazwy kolumn składające się z dziwnych wartości
+
+```{r}
+dane <- read_excel("../data/surowy plik od firmy badawczej.xlsx")
+head(dane)
+```
+
+Do wyczyszczenia danych wykorzystamy kilka funkcji z pakietu `dplyr`,
+`tidyr` i `stringr`
+
+```{r}
+dane |>
+  pivot_longer(cols = matches("^p\\d"),
+               names_to = "question",
+               values_to = "anwsers") |>
+  mutate(anwsers = parse_number(anwsers),
+         question_id = str_extract(question, "[a-z]\\d([a-z]\\d)?"),
+         question_type = str_extract(question, "\\[.{1,5}\\]"),
+         question_type = str_to_lower(str_remove_all(question_type, "\\[|\\]")),
+         question = str_c(question_type, question_id, sep = "_")) |>
+  select(-question_type, -question_id) |>
+  rename(country = "pl/de",
+         id = "id. ID odpowiedzi",
+         m1 = "m1. Liczba zatrudnionych osób (stan na 31.12.2021)",
+         m2 = "m2. Dominujący przedmiot prowadzonej działalności:",
+         m3 = 5,
+         m4 = "m4. W którym kraju prowadzona jest działalność-",
+         m5 = "m5. W którym województwie prowadzona jest działalność-",
+         m6 = 8,
+         m7 = "m7. Udział procentowy przeważającego akcjonariusza/właściciela:") |>
+  pivot_wider(names_from = "question", values_from = "anwsers") |>
+  mutate(m3 = ifelse(m3 >1000, 2025-m3, m3)) |> 
+  arrange(id)
+```
+
+Wyjaśnienie (wspomagane modelem Claude)
+
+## Przegląd
+
+Ten kod przekształca dane ankietowe z formatu szerokiego na długi,
+przetwarza pytania i odpowiedzi, a następnie wraca do formatu szerokiego
+z nowymi nazwami kolumn.
+
+## Analiza linijka po linijce
+
+### `dane |>`
+
+-   Rozpoczyna potok (pipe) przetwarzania danych
+-   Operator `|>` (natywny pipe w R 4.1+) przekazuje obiekt `dane` do
+    następnej funkcji
+-   Alternatywnie można użyć `%>%` z pakietu magrittr
+
+### `pivot_longer(cols = matches("^p\\d"), names_to = "question", values_to = "anwsers") |>`
+
+-   **Funkcja**: Przekształca dane z formatu szerokiego na długi
+-   **cols = matches("\^p\\d")**: Wybiera kolumny zaczynające się od "p"
+    i cyfry (np. p1, p2, p3...)
+    -   `^` - początek ciągu znaków
+    -   `p` - litera "p"
+    -   `\\d` - dowolna cyfra (0-9)
+-   **names_to = "question"**: Nazwy wybranych kolumn trafią do nowej
+    kolumny "question"
+-   **values_to = "anwsers"**: Wartości z tych kolumn trafią do kolumny
+    "anwsers" (uwaga: literówka - powinno być "answers")
+
+### `mutate(anwsers = parse_number(anwsers),`
+
+-   Konwertuje tekst na liczby, ignorując znaki nieliczbowe
+
+### `question_id = str_extract(question, "[a-z]\\d([a-z]\\d)?"),`
+
+-   Wyciąga identyfikator pytania
+-   Wzorzec: litera + cyfra, opcjonalnie powtórzone (np. "a1", "b2c3")
+
+### `question_type = str_extract(question, "\\[.{1,5}\\]"),`
+
+-   Wyciąga typ pytania w nawiasach kwadratowych
+-   `\\[.{1,5}\\]` - znajduje tekst w \[\] o długości 1-5 znaków
+
+### `question_type = str_to_lower(str_remove_all(question_type, "\\[|\\]")),`
+
+-   Usuwa nawiasy kwadratowe (`\\[|\\]`)
+-   Zamienia na małe litery
+
+### `question = str_c(question_type, question_id, sep = "_")) |>`
+
+-   Łączy typ i ID pytania z podkreślnikiem (np. "mc_a1")
+
+### `select(-question_type, -question_id) |>`
+
+-   Usuwa kolumny tymczasowe `question_type` i `question_id`
+-   Znak minus oznacza wykluczenie kolumn
+
+### `rename(country = "pl/de",`
+
+-   Zmienia nazwę kolumny "pl/de" na "country"
+
+### `id = "id. ID odpowiedzi",`
+
+-   Zmienia długą nazwę na krótką "id"
+
+### `m1 = "m1. Liczba zatrudnionych osób (stan na 31.12.2021)",`
+
+-   Skraca nazwę kolumny do "m1"
+
+### `m2 = "m2. Dominujący przedmiot prowadzonej działalności:",`
+
+-   Skraca nazwę kolumny do "m2"
+
+### `m3 = 5,`
+
+-   Zmienia nazwę 5. kolumny na "m3"
+
+### `m4 = "m4. W którym kraju prowadzona jest działalność-",`
+
+-   Skraca nazwę kolumny do "m4"
+
+### `m5 = "m5. W którym województwie prowadzona jest działalność-",`
+
+-   Skraca nazwę kolumny do "m5"
+
+### `m6 = 8,`
+
+-   Zmienia nazwę 8. kolumny na "m6"
+
+### `m7 = "m7. Udział procentowy przeważającego akcjonariusza/właściciela:") |>`
+
+-   Skraca nazwę kolumny do "m7"
+
+### `pivot_wider(names_from = "question", values_from = "anwsers") |>`
+
+-   Przekształca dane z powrotem na format szeroki
+-   Unikalne wartości z kolumny "question" stają się nowymi kolumnami
+-   Wartości z "anwsers" wypełniają te nowe kolumny
+
+### `mutate(m3 = ifelse(m3 > 1000, 2025 - m3, m3)) |>`
+
+-   Koryguje wartości w kolumnie m3
+-   Jeśli m3 \> 1000: oblicza 2025 - m3 (prawdopodobnie korekta błędnie
+    wpisanych lat)
+-   W przeciwnym razie: pozostawia wartość bez zmian
+-   Przykład: 2021 zostanie zamienione na 4 (2025-2021)
+
+### `arrange(id)`
+
+-   Sortuje dane rosnąco według kolumny "id"
+-   Zapewnia uporządkowanie wyników
+
+## Podsumowanie
+
+Kod przetwarza dane ankietowe, przekształcając je z szerokiego formatu
+(wiele kolumn pytań) na format analityczny z wyodrębnionymi typami pytań
+i identyfikatorami, a następnie wraca do formatu szerokiego z bardziej
+przejrzystymi nazwami kolumn.
