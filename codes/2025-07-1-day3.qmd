@@ -1,0 +1,213 @@
+---
+title: "Untitled"
+format: html
+---
+
+```{r instalacja, eval = FALSE}
+install.packages("summarytools")
+install.packages("skimr")
+```
+
+```{r ladowanie-pakietow}
+library(tidyverse)
+library(readxl)
+library(summarytools)
+library(skimr)
+```
+
++ wybrać od `id` do `school` i kolumnę `daysabs`, dla której należy zmienić nazwę na `absencja`
+
+```{r wczytanie}
+szkoly <- read_excel("../data/school-absence.xlsx") |>
+  select(id:school, absencja=daysabs)
+
+head(szkoly, 2)
+```
+
++ utworzyć histogram zmiennej `absencja`
+
+```{r histogramy, eval = F}
+hist(szkoly$absencja, breaks = "fd")
+
+szkoly |> 
+  ## dplyr::select zawsze tworzy ramkę danych (BŁĄD!!!)
+  select(absencja) |>  
+  hist()
+
+szkoly |> 
+  ## dplyr::pull wyciąga kolumnę w postaci wektora (jak df$zmienna)
+  pull(absencja) |> 
+  hist(main = "Liczba dni absencji", breaks = "fd")
+```
+
++ zgrupować dane według `school` i wyznaczyć sumę, medianę oraz średnią liczbę dni absencji. W której szkole uczniowe średnio więcej opuszczali zajęć?
+
+```{r agregacja}
+szkoly |>
+  group_by(school) |>
+  summarise_at(vars(absencja), list(sum=sum, me=median, avg=mean))
+
+szkoly |>
+  group_by(school) |>
+  summarise(absencja_s=sum(absencja),
+            absencja_m=median(absencja),
+            absencja_a=mean(absencja))
+
+szkoly |>
+  summarise(absencja_s=sum(absencja),
+            absencja_m=median(absencja),
+            absencja_a=mean(absencja), .by="school")
+```
+
++ zgrupować dane według płci i szkoły i wykonać to samo działanie co wyżej. Co możecie powiedzieć o rozkładach? 
+        
+```{r agregacja2}
+szkoly |>
+  group_by(gender, school) |>
+  summarise_at(vars(absencja), list(sum=sum, me=median, avg=mean))
+```
+
+Podsumowujemy zbiór danych z pakietem skimr
+
+```{r skim-przyklad}
+skim(szkoly)
+```
+
+Podsumowujemy zbiór danych z pakietem summarytools
+
+```{r summarytools-przyklad}
+dfSummary(szkoly)
+
+dfSummary(szkoly) |> print(method = "render")
+```
+
+Zmienne typu jakościowego w R: typ factor
+
+```{r modele-factor}
+model1 <- lm(absencja ~ gender + school, data = szkoly)
+model2 <- lm(absencja ~ factor(gender) + factor(school), data = szkoly)
+summary(model2)
+```
+
+Zmieniamy typ zmiennej w zbiorze danych
+
+```{r typy}
+is.character(szkoly$ethnic) ## spradzam czy zmienna jest typu tekstowego
+class(szkoly$ethnic) ## klasa / typ zmiennej
+```
+
+```{r as.factor, eval=FALSE}
+as.factor(zmiena) ## zmienię typ na factor ale nie kontroluję etykiet
+factor(zmienna) ## to samo ale mogę kontrolować etykiety
+```
+
+```{r factor-tworze}
+szkoly$plec <- factor(x = szkoly$gender, 
+                      levels = c("female", "male"),
+                      labels = c("dziewczynki", "chłopcy"))
+class(szkoly$plec)
+table(szkoly$plec)
+levels(szkoly$plec) ## poziomy danej zmiennej, pierwszy wyświetlony: referencyjny
+szkoly$plec2 <- relevel(szkoly$plec, ref = "chłopcy") ## na stałe zmieniam poziom referencyjny
+```
+
+```{r modele-faktory2}
+model3 <- lm(absencja ~ plec + school, data = szkoly)
+model4 <- lm(absencja ~ relevel(plec, ref = "chłopcy") + school, data = szkoly)
+model5 <- lm(absencja ~ plec2 + school, data = szkoly)
+summary(model5)
+```
+
+Ćwiczenie:
+
+- zmienna: school -- utworzyć zmienną szkola, typy factor z poziomami: 1=Szkoła A, 2=Szkoła B
+
+```{r cwiczenie}
+szkoly$school <- factor(szkoly$school, 
+                        1:2, # c(1,2)
+                        c("Szkoła A", "Szkoła B"))
+
+table(szkoly$school, useNA = "ifany") ## dodanie informacji o brakach danych
+```
+
+forcats -- pakiet do zmiennych typu jakosciowego (factor)
+
+# Tworzymy wizualizacje danych w R
+
+```{r}
+hist(szkoly$absencja, 
+     breaks = "fd",
+     main = "Rozkład liczby nieobecności", ## tytuł wykresu
+     xlab = "Liczba dni",  
+     ylab = "Częstość",
+     col = "#d95f02")
+```
+```{r}
+barplot(table(szkoly$absencja))
+
+szkoly$absencja |> 
+  table() |> 
+  barplot(xlab = "Liczba dni",
+          ylab = "Liczba uczniów", 
+          main = "Rozkład liczby nieobecności", col = "red")
+```
+
+```{r}
+boxplot(formula = absencja ~ ethnic, data=szkoly)
+
+boxplot(formula = absencja ~ gender + school, data=szkoly)
+```
+
+Tworzymy pierwszy wykres w ggplot2
+
+```{r}
+ggplot(data = szkoly, aes(x = gender, y = absencja)) +
+  geom_jitter(alpha = 0.5, shape = 1) + 
+  geom_boxplot() 
+
+ggplot(data = szkoly, aes(x = gender, y = absencja)) +
+  geom_jitter(alpha = 0.5, shape = 1) + 
+  geom_boxplot()  +
+  facet_wrap(~school)
+```
+```{r}
+ggplot(data = szkoly, aes(x = gender, y = absencja)) +
+  geom_boxplot()  +
+  geom_jitter(alpha = 0.5, shape = 1) +
+  facet_grid(school ~ ethnic) +
+  labs(x = "Płeć", 
+       y = "Absencja", 
+       title = "Liczba nieobecności według płci, szkoły i pochodzenia",
+       caption = "Źródło: opracowanie własne.") -> wykres1 ## przypisz wykres do obiektu o nazwie wykres1
+
+wykres1
+```
+
+Zapisujemy wykres do pliku
+
+```{r}
+ggsave(plot = wykres1, filename = "../results/wykres1.png", 
+       units = "cm", width = 15, height = 10)
+```
+
+Ćwiczenie:
+
+1. wczytaj dane z gospodarstw domowych
+2. wybierz gospodarstwa z dużych miast (500tys i więcej)
+3. stworz wykres rozrzutu w ggplot2 gdzie na osi x będzie dochód, a na y wydatki (podpowiedź: geom_point)
+4. zapiszcie do jpeg, 10 x 10 cm
+
+```{r}
+gosp <- read_excel(path = "../data/gospodarstwa.xlsx") |>
+  filter(klm == 1, !is.na(wydg)) 
+
+ggplot(data = gosp, aes(x = dochg, y = wydg)) +
+  geom_point(shape = 2, alpha = 0.5) +
+  labs(x = "Dochody", y = "Wydatki")  +
+  geom_smooth(method = "lm") +
+  coord_fixed(xlim = c(0, 40000), ylim = c(0,40000)) -> p1
+
+ggsave(plot = p1, filename = "../results/wykres1.jpeg", units = "cm", width = 10, height = 10)
+```
+
+
